@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ansh P. — AI Prompt Writer & Content Editor</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -535,20 +535,253 @@
     pointer-events: none;
   }
 
+
+  /* ===== NAV ===== */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 2000;
+    padding: 18px 60px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(10,10,15,0.85); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800;
+    color: var(--text); text-decoration: none;
+  }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 36px; list-style: none; }
+  .nav-links a {
+    font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--muted); text-decoration: none;
+    transition: color 0.3s; cursor: none;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  /* HAMBURGER */
+  .hamburger {
+    display: none; flex-direction: column; justify-content: center; gap: 5px;
+    background: none; border: none; cursor: pointer; padding: 6px; z-index: 2100;
+  }
+  .hamburger span {
+    display: block; width: 24px; height: 2px;
+    background: var(--accent); border-radius: 2px;
+    transition: transform 0.3s, opacity 0.3s;
+  }
+  .hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger.active span:nth-child(2) { opacity: 0; }
+  .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* MOBILE MENU */
+  .mobile-menu {
+    display: none; position: fixed; inset: 0; z-index: 1900;
+    background: rgba(10,10,15,0.97); backdrop-filter: blur(16px);
+    flex-direction: column; align-items: center; justify-content: center; gap: 44px;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+  }
+  .mobile-menu.open { opacity: 1; pointer-events: all; }
+  .mobile-menu a {
+    font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 700;
+    color: var(--muted); text-decoration: none; letter-spacing: 0.05em;
+    transition: color 0.3s;
+  }
+  .mobile-menu a:hover { color: var(--accent); }
+
+  /* ===== CONTACT MODAL — CYBERPUNK STYLE ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 5000;
+    background: rgba(10,10,15,0.94); backdrop-filter: blur(14px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.35s ease;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-box {
+    position: relative; width: 100%; max-width: 580px; margin: 20px;
+    background: linear-gradient(135deg, rgba(0,229,160,0.04), rgba(123,97,255,0.03));
+    border: 1px solid rgba(0,229,160,0.28);
+    padding: 52px 48px;
+    clip-path: polygon(20px 0%, 100% 0%, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+    transform: translateY(28px) scale(0.97); transition: transform 0.35s ease;
+    box-shadow: 0 0 80px rgba(0,229,160,0.07);
+  }
+  .modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
+
+  /* corner brackets */
+  .mc { position: absolute; width: 18px; height: 18px; border-color: var(--accent); border-style: solid; opacity: 0.6; }
+  .mc.tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
+  .mc.tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
+  .mc.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+  .mc.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+  .modal-close {
+    position: absolute; top: 18px; right: 22px;
+    background: none; border: none; cursor: pointer;
+    font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(0,229,160,0.4); display: flex; align-items: center; gap: 6px; transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--accent); }
+
+  .modal-label {
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 10px; opacity: 0.75;
+  }
+  .modal-label::before { content: '// '; }
+
+  .modal-title {
+    font-family: 'Syne', sans-serif; font-size: 1.9rem; font-weight: 800;
+    color: #fff; margin-bottom: 36px; letter-spacing: -0.01em;
+  }
+
+  .form-group { margin-bottom: 22px; }
+  .form-group label {
+    display: block; font-family: 'DM Mono', monospace; font-size: 10px;
+    letter-spacing: 0.3em; color: rgba(0,229,160,0.6); margin-bottom: 8px; text-transform: uppercase;
+  }
+  .form-group input, .form-group textarea {
+    width: 100%; background: rgba(0,0,0,0.55); border: 1px solid rgba(0,229,160,0.22);
+    color: #fff; font-family: 'DM Mono', monospace; font-size: 13px;
+    padding: 14px 18px; outline: none; resize: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .form-group input::placeholder, .form-group textarea::placeholder { color: rgba(200,220,230,0.28); }
+  .form-group input:focus, .form-group textarea:focus {
+    border-color: rgba(0,229,160,0.6); box-shadow: 0 0 20px rgba(0,229,160,0.07);
+  }
+  .form-group textarea { height: 130px; }
+
+  .form-submit {
+    width: 100%; padding: 16px; background: transparent;
+    border: 1px solid var(--accent); color: var(--accent);
+    font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 400;
+    letter-spacing: 0.35em; text-transform: uppercase; cursor: pointer;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    position: relative; overflow: hidden; transition: all 0.3s; margin-top: 8px;
+  }
+  .form-submit::before {
+    content: ''; position: absolute; inset: 0;
+    background: rgba(0,229,160,0.1); transform: translateX(-100%); transition: transform 0.3s;
+  }
+  .form-submit:hover::before { transform: translateX(0); }
+  .form-submit:hover { box-shadow: 0 0 30px rgba(0,229,160,0.3); }
+  .form-submit:disabled { opacity: 0.55; }
+
+  .form-success {
+    display: none; text-align: center; padding: 32px 20px;
+    font-family: 'DM Mono', monospace; color: var(--accent);
+    font-size: 13px; letter-spacing: 0.15em; line-height: 2.2; text-transform: uppercase;
+  }
+  .form-success.show { display: block; }
+
+  /* ===== HERO padding fix for fixed nav ===== */
+  .hero { padding-top: 120px; }
+
+  /* ===== RESPONSIVE — TABLET ===== */
+  @media (max-width: 1024px) {
+    nav { padding: 16px 36px; }
+    .hero, .section { padding: 100px 36px 60px; }
+    .cta-section { padding: 80px 36px; }
+    footer { padding: 32px 36px; }
+    .tools-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  }
+
+  /* ===== RESPONSIVE — MOBILE ===== */
   @media (max-width: 768px) {
-    .hero, .section { padding: 60px 24px; }
+    nav { padding: 14px 20px; }
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+    .mobile-menu { display: flex; }
+
+    .hero { padding: 100px 20px 60px; }
+    .section { padding: 60px 20px; }
+    .cta-section { padding: 70px 20px; }
+    footer { flex-direction: column; gap: 16px; text-align: center; padding: 32px 20px; }
+    .footer-note { text-align: center; }
+
+    .hero-name { font-size: clamp(48px, 16vw, 80px); }
+    .hero-stats { gap: 24px; }
+
+    .services-grid { grid-template-columns: 1fr; }
+    .service-card { padding: 28px 22px; }
+
+    .tools-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .tool-item { padding: 14px; gap: 10px; }
+    .tool-name { font-size: 12px; }
+
+    .step { grid-template-columns: 56px 1fr; gap: 16px; padding: 28px 0; }
+    .step-num { font-size: 36px; }
+
     .why-grid { grid-template-columns: 1fr; }
     .why-card.featured { grid-column: span 1; }
-    footer { flex-direction: column; gap: 16px; text-align: center; }
-    .footer-note { text-align: center; }
-    .cta-section { padding: 80px 24px; }
+    .why-card { padding: 24px; }
+
+    .btn-primary { width: 100%; justify-content: center; cursor: pointer; }
+
+    .modal-box { padding: 36px 20px; margin: 16px; border-radius: 16px; }
+    .modal-title { font-size: 1.4rem; }
+    .form-submit { cursor: pointer; }
   }
+
+  /* ===== RESPONSIVE — SMALL MOBILE ===== */
+  @media (max-width: 400px) {
+    .hero-name { font-size: 42px; }
+    .tools-grid { grid-template-columns: 1fr; }
+    .stat-val { font-size: 22px; }
+  }
+
 </style>
 </head>
 <body>
 
 <div class="cursor" id="cursor"></div>
 <div class="cursor-ring" id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Ansh <span>P.</span></a>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#tools">Tools</a></li>
+    <li><a href="#process">Process</a></li>
+    <li><a href="#why">Why Me</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#services" class="m-link">Services</a>
+  <a href="#tools" class="m-link">Tools</a>
+  <a href="#process" class="m-link">Process</a>
+  <a href="#why" class="m-link">Why Me</a>
+</div>
+
+<!-- CONTACT MODAL -->
+<div class="modal-overlay" id="contactModal">
+  <div class="modal-box">
+    <span class="mc tl"></span><span class="mc tr"></span>
+    <span class="mc bl"></span><span class="mc br"></span>
+    <button class="modal-close" onclick="closeModal()">✕ CLOSE</button>
+    <div class="modal-label">INITIATE CONTACT</div>
+    <div class="modal-title">Send a Message</div>
+    <form id="contactForm" onsubmit="handleSubmit(event)">
+      <div class="form-group">
+        <label>Your Name</label>
+        <input type="text" id="senderName" placeholder="Enter your name..." required />
+      </div>
+      <div class="form-group">
+        <label>Your Email</label>
+        <input type="email" id="senderEmail" placeholder="your@email.com" required />
+      </div>
+      <div class="form-group">
+        <label>Message</label>
+        <textarea id="senderMessage" placeholder="Tell me about your project..." required></textarea>
+      </div>
+      <button type="submit" class="form-submit" id="submitBtn">⬡ TRANSMIT MESSAGE ⬡</button>
+    </form>
+    <div class="form-success" id="formSuccess">✦ MESSAGE RECEIVED! ✦<br/>I'll get back to you soon.</div>
+  </div>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -589,7 +822,7 @@
 </section>
 
 <!-- SERVICES -->
-<section class="section reveal">
+<section class="section reveal" id="services">
   <div class="section-label">What I Do</div>
   <h2 class="section-title">Services I Offer</h2>
 
@@ -642,7 +875,7 @@
 </section>
 
 <!-- TOOLS -->
-<section class="section tools-section reveal">
+<section class="section tools-section reveal" id="tools">
   <div class="section-label">My Stack</div>
   <h2 class="section-title">AI Tools I Master</h2>
 
@@ -661,7 +894,7 @@
 </section>
 
 <!-- PROCESS -->
-<section class="section reveal">
+<section class="section reveal" id="process">
   <div class="section-label">How I Work</div>
   <h2 class="section-title">My Process</h2>
 
@@ -698,7 +931,7 @@
 </section>
 
 <!-- WHY ME -->
-<section class="section tools-section reveal">
+<section class="section tools-section reveal" id="why">
   <div class="section-label">Why Choose Me</div>
   <h2 class="section-title">What Sets Me Apart</h2>
 
@@ -739,10 +972,10 @@
 <section class="cta-section reveal">
   <h2 class="cta-title">Let's Build<br><span style="color:var(--accent);">Something Great</span></h2>
   <p class="cta-sub">Have a project that needs sharp AI prompts or polished AI content? Let's connect and make it happen — fast.</p>
-  <a href="#" class="btn-primary">
+  <button onclick="openModal()" class="btn-primary" style="border:none;">
     Hire Me on Freelancer
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-  </a>
+  </button>
 </section>
 
 <!-- FOOTER -->
@@ -758,52 +991,121 @@
 </footer>
 
 <script>
-  // Custom cursor
+  // ===== EMAILJS INIT =====
+  // ⚠️ YAHAN APNI API KEY DAALO — emailjs.com > Account > API Keys
+  emailjs.init('qPFtJB_UMMNM4OH5y');
+
+  // ===== CURSOR =====
   const cursor = document.getElementById('cursor');
   const ring = document.getElementById('cursor-ring');
-  let mx = 0, my = 0, rx = 0, ry = 0;
+  const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
-  document.addEventListener('mousemove', e => {
-    mx = e.clientX; my = e.clientY;
-    cursor.style.left = mx + 'px';
-    cursor.style.top = my + 'px';
-  });
-
-  function animRing() {
-    rx += (mx - rx) * 0.12;
-    ry += (my - ry) * 0.12;
-    ring.style.left = rx + 'px';
-    ring.style.top = ry + 'px';
-    requestAnimationFrame(animRing);
+  if (isTouch) {
+    cursor.style.display = 'none';
+    ring.style.display = 'none';
+    document.body.style.cursor = 'auto';
+  } else {
+    let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+    let rx = mx, ry = my;
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      cursor.style.left = mx + 'px';
+      cursor.style.top = my + 'px';
+    });
+    function animRing() {
+      rx += (mx - rx) * 0.12;
+      ry += (my - ry) * 0.12;
+      ring.style.left = rx + 'px';
+      ring.style.top = ry + 'px';
+      requestAnimationFrame(animRing);
+    }
+    animRing();
+    document.querySelectorAll('a, button, .service-card, .tool-item, .why-card').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursor.style.width = '20px'; cursor.style.height = '20px';
+        ring.style.width = '52px'; ring.style.height = '52px';
+      });
+      el.addEventListener('mouseleave', () => {
+        cursor.style.width = '12px'; cursor.style.height = '12px';
+        ring.style.width = '36px'; ring.style.height = '36px';
+      });
+    });
   }
-  animRing();
 
-  document.querySelectorAll('a, button, .service-card, .tool-item, .why-card').forEach(el => {
-    el.addEventListener('mouseenter', () => {
-      cursor.style.width = '20px';
-      cursor.style.height = '20px';
-      ring.style.width = '52px';
-      ring.style.height = '52px';
-    });
-    el.addEventListener('mouseleave', () => {
-      cursor.style.width = '12px';
-      cursor.style.height = '12px';
-      ring.style.width = '36px';
-      ring.style.height = '36px';
+  // ===== HAMBURGER =====
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobileMenu');
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('active');
+    mobileMenu.classList.toggle('open');
+    document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+  });
+  document.querySelectorAll('.m-link').forEach(link => {
+    link.addEventListener('click', () => {
+      hamburger.classList.remove('active');
+      mobileMenu.classList.remove('open');
+      document.body.style.overflow = '';
     });
   });
 
-  // Scroll reveal
+  // ===== MODAL =====
+  const modal = document.getElementById('contactModal');
+  function openModal() { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
+  function closeModal() {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    setTimeout(() => {
+      document.getElementById('contactForm').style.display = '';
+      document.getElementById('formSuccess').classList.remove('show');
+      const btn = document.getElementById('submitBtn');
+      btn.textContent = '⬡ TRANSMIT MESSAGE ⬡';
+      btn.disabled = false;
+    }, 400);
+  }
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  // ===== EMAILJS SEND =====
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+    const name = document.getElementById('senderName').value.trim();
+    const email = document.getElementById('senderEmail').value.trim();
+    const message = document.getElementById('senderMessage').value.trim();
+    try {
+      // ⚠️ YAHAN APNA service_id aur template_id daalo
+      await emailjs.send('service_e4ovn3g', 'template_r12hyed', {
+        from_name: name, from_email: email,
+        name: name, email: email, message: message,
+        to_email: 'aptydiscord12@gmail.com'
+      });
+      document.getElementById('contactForm').style.display = 'none';
+      document.getElementById('formSuccess').classList.add('show');
+      setTimeout(closeModal, 3500);
+    } catch (err) {
+      console.error('EmailJS Error:', err);
+      btn.textContent = '⚠ Error — Try Again';
+      btn.disabled = false;
+    }
+  }
+
+  // ===== SCROLL REVEAL =====
   const reveals = document.querySelectorAll('.reveal');
   const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-      }
-    });
-  }, { threshold: 0.1 });
-
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0 });
   reveals.forEach(r => observer.observe(r));
+
+  // ===== SMOOTH SCROLL =====
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const t = document.querySelector(a.getAttribute('href'));
+      if (t) t.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
 </script>
 </body>
 </html>
